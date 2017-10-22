@@ -48,10 +48,12 @@
     "gatsby-transformer-sharp": "^1.6.1",
     "glamor": "^2.20.40",
     "hex2rgba": "^0.0.1",
+    "lunr": "^2.1.4",
     "prettier": "^1.7.4",
     "remarkable": "^1.7.1",
     "request-promise": "^4.2.2",
     "rimraf": "^2.6.1",
+    "sanitize-html": "^1.14.1",
     "slugify": "^1.2.1",
     "string.prototype.includes": "^1.0.0",
     "string.prototype.repeat": "^0.2.0",
@@ -82,6 +84,7 @@
     "reset": "rimraf ./.cache"
   },
   "devDependencies": {
-    "eslint-config-prettier": "^2.6.0"
+    "eslint-config-prettier": "^2.6.0",
+    "stemmer": "^1.0.1"
   }
 }

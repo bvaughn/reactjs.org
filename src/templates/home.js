@@ -16,7 +16,7 @@ import TitleAndMetaTags from 'components/TitleAndMetaTags';
 import {colors, media, sharedStyles} from 'theme';
 import createOgUrl from 'utils/createOgUrl';
 import loadScript from 'utils/loadScript';
-import {babelURL} from 'site-constants';
+import {urls} from 'site-constants';
 import ReactDOM from 'react-dom';
 
 class Home extends Component {
@@ -33,7 +33,7 @@ class Home extends Component {
       mountCodeExample('markdownExample', MARKDOWN_COMPONENT);
     }
 
-    loadScript(babelURL).then(mountCodeExamples, error => {
+    loadScript(urls.babel).then(mountCodeExamples, error => {
       console.error('Babel failed to load.');
 
       mountCodeExamples();

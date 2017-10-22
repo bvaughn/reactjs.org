@@ -5,32 +5,22 @@
  */
 
 import React, {Component} from 'react';
+import loadScript from 'utils/loadScript';
+import {urls} from 'site-constants';
 import {colors, media} from 'theme';
+
+const SEARCH_INDEX_PATH = '/search.index';
 
 class DocSearch extends Component {
   state = {
-    enabled: true,
+    searchDisabled: false,
+    searchInitialized: false,
   };
-  componentDidMount() {
-    // Initialize Algolia search.
-    // TODO Is this expensive? Should it be deferred until a user is about to search?
-    // eslint-disable-next-line no-undef
-    if (window.docsearch) {
-      window.docsearch({
-        apiKey: '36221914cce388c46d0420343e0bb32e',
-        indexName: 'react',
-        inputSelector: '#algolia-doc-search',
-      });
-    } else {
-      console.warn('Search has failed to load and now is being disabled');
-      this.setState({enabled: false});
-    }
-  }
 
   render() {
-    const {enabled} = this.state;
+    const {searchDisabled} = this.state;
 
-    return enabled ? (
+    return (
       <form
         css={{
           display: 'flex',
@@ -61,7 +51,8 @@ class DocSearch extends Component {
             appearance: 'none',
             background: 'transparent',
             border: 0,
-            color: colors.white,
+            color: searchDisabled ? colors.red : colors.white,
+            opacity: searchDisabled ? 0.5 : 1,
             fontSize: 18,
             fontWeight: 300,
             fontFamily: 'inherit',
@@ -97,14 +88,41 @@ class DocSearch extends Component {
               },
             },
           }}
+          onFocus={this._onFocus}
           id="algolia-doc-search"
           type="search"
           placeholder="Search docs"
           aria-label="Search docs"
+          disabled={searchDisabled}
         />
       </form>
-    ) : null;
+    );
   }
+
+  _initializeSearch = () => {
+    loadScript(urls.lunr)
+      .then(() => fetch(SEARCH_INDEX_PATH))
+      .then(data => data.json())
+      .then(json => {
+        window.index = lunr.Index.load(json);
+
+        this.setState({
+          searchInitialized: true,
+        });
+      }).catch(error => {
+        console.error(error);
+
+        this.setState({
+          searchDisabled: true,
+        });
+      });
+  };
+
+  _onFocus = () => {
+    if (!this.state.searchInitialized) {
+      this._initializeSearch();
+    }
+  };
 }
 
 export default DocSearch;
