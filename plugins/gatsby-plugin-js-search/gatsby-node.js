@@ -1,24 +1,47 @@
 'use strict';
 
 const {writeFileSync} = require('fs');
-const lunr = require('lunr');
 const {join} = require('path');
 const sanitize = require('sanitize-html');
+const stemmer = require('stemmer');
+const StopWords = require('./stop-words');
 
-/* TODO Tap into :onCreatePage too for non-markdown pages?
-exports.onCreatePage = async ({ page, boundActionCreators }) => {
-  console.log('onCreatePage()', page);
+const TOKENIZER_REGEX = /[^a-zа-яё0-9\-\.']+/i;
+
+function tokenize(text) {
+  const uniqueWords = {};
+
+  return text
+    .split(TOKENIZER_REGEX) // Split words at boundaries
+    .filter(word => {
+      // Remove empty tokens and stop-words
+      return word != '' && StopWords[word] === undefined;
+    })
+    .map(word => {
+      // Stem and lower case (eg "Considerations" -> "consider")
+      return stemmer(word.toLocaleLowerCase());
+    })
+    .filter(word => {
+      // Remove duplicates so serialized format is smaller
+      // This means we can't later use TF-IDF ranking but maybe that's ok?
+      // If we decide later to use it let's pre-generate its metadata also.
+      if (uniqueWords[word] === undefined) {
+        uniqueWords[word] = true;
+        return true;
+      }
+    });
 }
-*/
 
-exports.createPages = async ({ graphql, boundActionCreators }) => {
-  const result = await graphql(query)
+exports.createPages = async ({graphql, boundActionCreators}) => {
+  const {createNode} = boundActionCreators;
+
+  const result = await graphql(query);
 
   if (result.errors) {
-    throw new Error(result.errors.join(`, `))
+    throw new Error(result.errors.join(`, `));
   }
 
-  const pages = [];
+  const searchData = [];
 
   result.data.allMarkdownRemark.edges.forEach(edge => {
     const html = edge.node.html;
@@ -28,38 +51,19 @@ exports.createPages = async ({ graphql, boundActionCreators }) => {
     // Strip all HTML markup from searchable content
     const text = sanitize(html, {
       allowedTags: false,
-      allowedAttributes: false
+      allowedAttributes: false,
     });
 
-    pages.push({
-      id: slug,
-      text,
-      title,
-    });
-  });
+    const index = tokenize(`${text} ${title}`).join(' ');
 
-  // Pre-generate Lunr search index
-  const index = lunr(function() {
-    this.field('text');
-    this.field('title');
-
-    pages.forEach(page => {
-      this.add(page);
-    });
+    searchData.push(`${slug}\t${index}`);
   });
 
   const path = join(__dirname, '../../public/search.index');
-  const data = JSON.stringify(index.toJSON());
+  const data = searchData.join('\n');
 
   writeFileSync(path, data);
 };
-
-/* TODO Use this hook if we end up using :onCreatePage too
-exports.onPostBuild = () => {
-  console.log('Copying locales');
-  fs.copySync(path.join(__dirname, '/src/locales'), path.join(__dirname, '/public/locales'));
-}
-*/
 
 const query = `
   {

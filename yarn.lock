@@ -3687,6 +3687,10 @@ flatten@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/flatten/-/flatten-1.0.2.tgz#dae46a9d78fbe25292258cc1e780a41d95c03782"
 
+flow-bin@^0.50.0:
+  version "0.50.0"
+  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.50.0.tgz#d4cdb2430dee1a3599f0eb6fe551146e3027256a"
+
 flow-bin@^0.56.0:
   version "0.56.0"
   resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.56.0.tgz#ce43092203a344ba9bf63c0cabe95d95145f6cad"
@@ -5414,6 +5418,13 @@ js-base64@^2.1.9:
 js-tokens@^3.0.0, js-tokens@^3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-3.0.2.tgz#9866df395102130e38f7f996bceb65443209c25b"
+
+js-worker-search@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/js-worker-search/-/js-worker-search-1.2.0.tgz#ef18d029bda0d8ef412d4f680d2d0b041b5f8e62"
+  dependencies:
+    flow-bin "^0.50.0"
+    uuid "^2.0.1"
 
 js-yaml@^3.4.6, js-yaml@^3.5.2, js-yaml@^3.8.1, js-yaml@^3.9.1:
   version "3.10.0"

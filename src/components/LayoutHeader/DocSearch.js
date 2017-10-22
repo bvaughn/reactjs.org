@@ -5,7 +5,6 @@
  */
 
 import React, {Component} from 'react';
-import loadScript from 'utils/loadScript';
 import {urls} from 'site-constants';
 import {colors, media} from 'theme';
 
@@ -15,7 +14,31 @@ class DocSearch extends Component {
   state = {
     searchDisabled: false,
     searchInitialized: false,
+    searchText: '',
   };
+
+  _searchIndex = null;
+  _searchResults = [];
+
+  componentWillUpdate(nextProps, nextState) {
+    const {searchInitialized, searchText} = nextState;
+
+    if (searchInitialized && this.state.searchText !== searchText) {
+      if (searchText) {
+        this._searchIndex.search(searchText)
+          .then(results => {
+            this._searchResults = results;
+            console.log(searchText);
+            console.log(this._searchResults);
+          })
+          .catch(error => {
+            this._searchResults = [];
+          });
+      } else {
+        this._searchResults = [];
+      }
+    }
+  }
 
   render() {
     const {searchDisabled} = this.state;
@@ -88,8 +111,8 @@ class DocSearch extends Component {
               },
             },
           }}
+          onChange={this._onChange}
           onFocus={this._onFocus}
-          id="algolia-doc-search"
           type="search"
           placeholder="Search docs"
           aria-label="Search docs"
@@ -99,28 +122,23 @@ class DocSearch extends Component {
     );
   }
 
-  _initializeSearch = () => {
-    loadScript(urls.lunr)
-      .then(() => fetch(SEARCH_INDEX_PATH))
-      .then(data => data.json())
-      .then(json => {
-        window.index = lunr.Index.load(json);
+  // TODO Debounce
+  _onChange = event => {
+    this.setState({
+      searchText: event.target.value,
+    });
+  };
+
+  _onFocus = () => {
+    if (this._searchIndex === null) {
+      require.ensure([], () => {
+        this._searchIndex = require('./SearchIndex.js');
+        window.searcnIndex = this._searchIndex; // TODO TESTING
 
         this.setState({
           searchInitialized: true,
         });
-      }).catch(error => {
-        console.error(error);
-
-        this.setState({
-          searchDisabled: true,
-        });
       });
-  };
-
-  _onFocus = () => {
-    if (!this.state.searchInitialized) {
-      this._initializeSearch();
     }
   };
 }

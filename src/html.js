@@ -17,9 +17,7 @@ if (process.env.NODE_ENV === `production`) {
   }
 }
 
-const JS_NPM_URLS = [
-  '//unpkg.com/docsearch.js@2.4.1/dist/cdn/docsearch.min.js',
-];
+const JS_CDN_URLS = [];
 
 export default class HTML extends Component {
   render() {
@@ -33,7 +31,7 @@ export default class HTML extends Component {
       );
     }
 
-    const js = JS_NPM_URLS.map(url => <script key={url} src={url} />);
+    const js = JS_CDN_URLS.map(url => <script key={url} src={url} />);
 
     return (
       <html lang="en">
@@ -54,6 +52,7 @@ export default class HTML extends Component {
             id="___gatsby"
             dangerouslySetInnerHTML={{__html: this.props.body}}
           />
+          <div id="portal" />
           {this.props.postBodyComponents}
         </body>
       </html>
