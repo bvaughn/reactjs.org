@@ -25,7 +25,8 @@ class DocSearch extends Component {
 
     if (searchInitialized && this.state.searchText !== searchText) {
       if (searchText) {
-        this._searchIndex.search(searchText)
+        this._searchIndex
+          .search(searchText)
           .then(results => {
             this._searchResults = results;
             console.log(searchText);

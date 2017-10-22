@@ -56,7 +56,7 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
 
     const index = tokenize(`${text} ${title}`).join(' ');
 
-    searchData.push(`${slug}\t${index}`);
+    searchData.push(`${slug}\t${title}\t${index}`);
   });
 
   const path = join(__dirname, '../../public/search.index');
