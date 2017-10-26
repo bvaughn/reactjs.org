@@ -3,7 +3,7 @@
 const {writeFileSync} = require('fs');
 const {join} = require('path');
 const sanitize = require('sanitize-html');
-const stemmer = require('./todo-stemmer'); // TODO require('stemmer');
+const stemmer = require('stemmer');
 const StopWords = require('./stop-words');
 
 const TOKENIZER_REGEX = /[^a-zа-яё0-9\-\.']+/i;
