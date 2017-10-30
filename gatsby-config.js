@@ -56,6 +56,7 @@ module.exports = {
           },
           'gatsby-remark-autolink-headers',
           'gatsby-remark-use-jsx',
+          'gatsby-remark-create-search-index',
           'gatsby-plugin-js-search',
           {
             resolve: 'gatsby-remark-prismjs',

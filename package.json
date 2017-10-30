@@ -87,6 +87,8 @@
   },
   "devDependencies": {
     "eslint-config-prettier": "^2.6.0",
+    "html-entities": "^1.2.1",
+    "remove-markdown": "^0.2.2",
     "stemmer": "^1.0.1"
   }
 }

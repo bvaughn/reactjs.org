@@ -1,12 +1,33 @@
 'use strict';
 
 const {writeFileSync} = require('fs');
+const {XmlEntities} = require('html-entities');
 const {join} = require('path');
-const sanitize = require('sanitize-html');
+const removeMarkdown = require('remove-markdown');
+const sanitizeHtml = require('sanitize-html');
 const stemmer = require('stemmer');
 const StopWords = require('./stop-words');
 
-const TOKENIZER_REGEX = /[^a-zа-яё0-9\-\.']+/i;
+const entities = new XmlEntities();
+
+const TOKENIZER_REGEX = /[\s]+/g;
+
+function sanitize(text) {
+  return sanitizeHtml(text, {
+    allowedTags: [],
+    allowedAttributes: [],
+    parser: {
+      decodeEntities: true
+    }
+  })
+  .split(/[\s]+/g)
+  .map(token => 
+    entities.decode(token)
+      .replace(/^[~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '')
+      .replace(/[~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]$/g, '')
+  )
+  .join(' ');
+}
 
 function tokenize(text) {
   const uniqueWords = {};
@@ -17,9 +38,19 @@ function tokenize(text) {
       // Remove empty tokens and stop-words
       return word != '' && StopWords[word] === undefined;
     })
-    .map(word => {
+    .map(token => {
+      // Strip HTML entities
+      token = entities.decode(token);
+
+      // Strip dangling punctuation
+      token = token
+        .replace(/^[~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '')
+        .replace(/[~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]$/g, '');
+
       // Stem and lower case (eg "Considerations" -> "consider")
-      return stemmer(word.toLocaleLowerCase());
+      token = stemmer(token.toLocaleLowerCase());
+
+      return token;
     })
     .filter(word => {
       // Remove duplicates so serialized format is smaller
@@ -43,21 +74,27 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
 
   const searchData = [];
 
+const rawData = [];
   result.data.allMarkdownRemark.edges.forEach(edge => {
+    const content = edge.node.internal.content;
     const html = edge.node.html;
     const slug = edge.node.fields.slug;
     const title = edge.node.frontmatter.title;
 
     // Strip all HTML markup from searchable content
-    const text = sanitize(html, {
-      allowedTags: false,
-      allowedAttributes: false,
+    let text = content.replace(/(```)[^(```)]+(```)/g, '');
+    text = removeMarkdown(text)
+    text = sanitize(text, {
+      allowedTags: [],
+      allowedAttributes: []
     });
+rawData.push(`${slug}\t${title}\t${sanitize(text)}`)
 
     const index = tokenize(`${text} ${title}`).join(' ');
 
     searchData.push(`${slug}\t${title}\t${index}`);
   });
+writeFileSync(join(__dirname, '../../public/search.raw'), rawData.join('\n'));
 
   const path = join(__dirname, '../../public/search.index');
   const data = searchData.join('\n');
@@ -71,11 +108,14 @@ const query = `
       edges {
         node {
           html
+          fields {
+            slug
+          }
           frontmatter {
             title
           }
-          fields {
-            slug
+          internal {
+            content
           }
         }
       }
