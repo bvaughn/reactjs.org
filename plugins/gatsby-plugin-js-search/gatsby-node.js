@@ -17,16 +17,18 @@ function sanitize(text) {
     allowedTags: [],
     allowedAttributes: [],
     parser: {
-      decodeEntities: true
-    }
+      decodeEntities: true,
+    },
   })
-  .split(/[\s]+/g)
-  .map(token => 
-    entities.decode(token)
-      .replace(/^[~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '')
-      .replace(/[~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]$/g, '')
-  )
-  .join(' ');
+    .split(/[\s]+/g)
+    .map(
+      token =>
+        entities
+          .decode(token) // Decode HTML entities (eg "&nbsp;" => "&")
+          .replace(/^[~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '') // Remove leading punctuation
+          .replace(/[~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]$/g, ''), // Remove trailing punctuation
+    )
+    .join(' ');
 }
 
 function tokenize(text) {
@@ -39,8 +41,10 @@ function tokenize(text) {
       return word != '' && StopWords[word] === undefined;
     })
     .map(token => {
-      // Strip HTML entities
-      token = entities.decode(token);
+      token = entities
+          .decode(token) // Decode HTML entities (eg "&nbsp;" => "&")
+          .replace(/^[~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '') // Remove leading punctuation
+          .replace(/[~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]$/g, ''), // Remove trailing punctuation
 
       // Strip dangling punctuation
       token = token
@@ -72,34 +76,35 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
     throw new Error(result.errors.join(`, `));
   }
 
-  const searchData = [];
+  const rawData = [];
+  const searchIndex = [];
 
-const rawData = [];
   result.data.allMarkdownRemark.edges.forEach(edge => {
     const content = edge.node.internal.content;
     const html = edge.node.html;
     const slug = edge.node.fields.slug;
     const title = edge.node.frontmatter.title;
 
-    // Strip all HTML markup from searchable content
+    // Strip formatted code examples from content.
     let text = content.replace(/(```)[^(```)]+(```)/g, '');
-    text = removeMarkdown(text)
+    text = removeMarkdown(text);
     text = sanitize(text, {
       allowedTags: [],
-      allowedAttributes: []
+      allowedAttributes: [],
     });
-rawData.push(`${slug}\t${title}\t${sanitize(text)}`)
+
+    rawData.push(`${slug}\t${title}\t${sanitize(text)}`);
 
     const index = tokenize(`${text} ${title}`).join(' ');
 
-    searchData.push(`${slug}\t${title}\t${index}`);
+    searchIndex.push(`${slug}\t${title}\t${index}`);
   });
-writeFileSync(join(__dirname, '../../public/search.raw'), rawData.join('\n'));
 
-  const path = join(__dirname, '../../public/search.index');
-  const data = searchData.join('\n');
-
-  writeFileSync(path, data);
+  writeFileSync(
+    join(__dirname, '../../public/search.index'),
+    searchIndex.join('\n'),
+  );
+  writeFileSync(join(__dirname, '../../public/search.raw'), rawData.join('\n'));
 };
 
 const query = `
@@ -122,3 +127,26 @@ const query = `
     }
   }
 `;
+
+/*
+const query = `
+  {
+    allMarkdownRemark {
+      edges {
+        node {
+          html
+          fields {
+            slug
+          }
+          frontmatter {
+            title
+          }
+          internal {
+            content
+          }
+        }
+      }
+    }
+  }
+`;
+*/
