@@ -15,6 +15,7 @@
     "@gaearon/react-live": "1.7.1-with-safari-fix",
     "array-from": "^2.1.1",
     "babel-eslint": "^8.0.1",
+    "downshift": "^1.16.1",
     "eslint": "^4.8.0",
     "eslint-config-fbjs": "^2.0.0",
     "eslint-config-react": "^1.1.7",

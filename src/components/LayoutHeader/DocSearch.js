@@ -4,10 +4,12 @@
  * @emails react-core
  */
 
+import Downshift from 'downshift';
 import React, {Component} from 'react';
 import {urls} from 'site-constants';
 import {colors, media} from 'theme';
 
+const SEARCH_DOCUMENTS_PATH = '/search.documents';
 const SEARCH_INDEX_PATH = '/search.index';
 
 class DocSearch extends Component {
@@ -25,16 +27,9 @@ class DocSearch extends Component {
 
     if (searchInitialized && this.state.searchText !== searchText) {
       if (searchText) {
-        this._searchIndex
-          .search(searchText)
-          .then(results => {
-            this._searchResults = results;
-            console.log(searchText);
-            console.log(this._searchResults);
-          })
-          .catch(error => {
-            this._searchResults = [];
-          });
+        console.log(searchText);
+        this._searchResults = this._searchIndex.search(searchText);
+        console.log(this._searchResults);
       } else {
         this._searchResults = [];
       }
@@ -70,61 +65,91 @@ class DocSearch extends Component {
             minWidth: 120,
           },
         }}>
-        <input
-          css={{
-            appearance: 'none',
-            background: 'transparent',
-            border: 0,
-            color: searchDisabled ? colors.red : colors.white,
-            opacity: searchDisabled ? 0.5 : 1,
-            fontSize: 18,
-            fontWeight: 300,
-            fontFamily: 'inherit',
-            position: 'relative',
-            padding: '5px 5px 5px 29px',
-            backgroundImage: 'url(/search.svg)',
-            backgroundSize: '16px 16px',
-            backgroundRepeat: 'no-repeat',
-            backgroundPositionY: 'center',
-            backgroundPositionX: '5px',
+          <Downshift onChange={this._onChange}>
+            {({
+              getInputProps,
+              getItemProps,
+              isOpen,
+              inputValue,
+              selectedItem,
+              highlightedIndex
+            }) => [
+              <input
+                css={{
+                  appearance: 'none',
+                  background: 'transparent',
+                  border: 0,
+                  color: searchDisabled ? colors.red : colors.white,
+                  opacity: searchDisabled ? 0.5 : 1,
+                  fontSize: 18,
+                  fontWeight: 300,
+                  fontFamily: 'inherit',
+                  position: 'relative',
+                  padding: '5px 5px 5px 29px',
+                  backgroundImage: 'url(/search.svg)',
+                  backgroundSize: '16px 16px',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPositionY: 'center',
+                  backgroundPositionX: '5px',
 
-            ':focus': {
-              outline: 0,
-              backgroundColor: colors.lighter,
-              borderRadius: '0.25rem',
-            },
+                  ':focus': {
+                    outline: 0,
+                    backgroundColor: colors.lighter,
+                    borderRadius: '0.25rem',
+                  },
 
-            [media.lessThan('large')]: {
-              fontSize: 16,
-            },
-            [media.greaterThan('small')]: {
-              width: '100%',
-            },
-            [media.lessThan('small')]: {
-              width: '16px',
-              transition: 'width 0.2s ease, padding 0.2s ease',
-              paddingLeft: '16px',
+                  [media.lessThan('large')]: {
+                    fontSize: 16,
+                  },
+                  [media.greaterThan('small')]: {
+                    width: '100%',
+                  },
+                  [media.lessThan('small')]: {
+                    width: '16px',
+                    transition: 'width 0.2s ease, padding 0.2s ease',
+                    paddingLeft: '16px',
 
-              ':focus': {
-                paddingLeft: '29px',
-                width: '8rem',
-                outline: 'none',
-              },
-            },
-          }}
-          onChange={this._onChange}
-          onFocus={this._onFocus}
-          type="search"
-          placeholder="Search docs"
-          aria-label="Search docs"
-          disabled={searchDisabled}
-        />
+                    ':focus': {
+                      paddingLeft: '29px',
+                      width: '8rem',
+                      outline: 'none',
+                    },
+                  },
+                }}
+                {...getInputProps({
+                  disabled: searchDisabled,
+                  onFocus: this._onFocus,
+                  placeholder: 'Search docs',
+                  type: 'search',
+                })}
+              />,
+              isOpen ? (
+                <div style={{border: '1px solid #ccc'}}>
+                  {this._searchResults.map((item, index) => (
+                    <div
+                      {...getItemProps({item})}
+                      key={item}
+                      style={{
+                        backgroundColor:
+                          highlightedIndex === index ? 'gray' : 'white',
+                        fontWeight: selectedItem === item ? 'bold' : 'normal',
+                      }}
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              ) : null
+            ]
+          }
+        </Downshift>
       </form>
     );
   }
 
   // TODO Debounce
   _onChange = event => {
+    console.log('_onChange()', event.target.value);
     this.setState({
       searchText: event.target.value,
     });

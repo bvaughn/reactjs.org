@@ -106,11 +106,6 @@ export const pageQuery = graphql`
         title
       }
     }
-    errorCodesJson {
-      internal {
-        contentDigest
-      }
-    }
   }
 `;
 
